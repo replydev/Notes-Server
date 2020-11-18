@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS `associations` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`comment` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
+	`user` INT(11) NULL DEFAULT NULL,
+	`note` INT(11) NULL DEFAULT NULL,
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `FK__users` (`user`) USING BTREE,
+	INDEX `FK__notes` (`note`) USING BTREE,
+	CONSTRAINT `FK__notes` FOREIGN KEY (`note`) REFERENCES `notes`.`notes` (`id`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK__users` FOREIGN KEY (`user`) REFERENCES `notes`.`users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;

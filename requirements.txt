@@ -1,0 +1,4 @@
+pycryptodomex
+pyDH
+argon2-cffi
+mariadb
