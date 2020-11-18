@@ -1,0 +1,3 @@
+[submodule "MyCryptograpy"]
+	path = MyCryptograpy
+	url = git@codeberg.org:replydev/MyCryptograpy.git
