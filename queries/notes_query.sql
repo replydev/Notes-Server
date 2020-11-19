@@ -1,4 +1,4 @@
 SELECT notes.`data` FROM notes,users,associations
 WHERE users.id = associations.user
 AND associations.note = notes.id
-AND users.id = 1
+AND users.id = {$id}
