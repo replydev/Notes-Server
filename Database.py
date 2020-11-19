@@ -41,12 +41,26 @@ def check_tables():
     cur.execute(associations_sql)
     cur.close()
 
+def exists(username):
+    global conn
+    global config
+    cursor = conn.cursor(prepared=True)
+    cursor.execute("SELECT id FROM " + config.getDatabaseName() + ".users WHERE username = %s",(username,))
+    exists = False
+    for (id) in cursor:
+        exists = True
+        break
+
+    cursor.close()
+    return exists
+
+
 def get_userid(username,password):
     global conn
     global config
-    cursor = conn.cursor()
+    cursor = conn.cursor(prepared=True)
     users = []
-    cursor.execute("SELECT id, username, password FROM ?.users WHERE username = ?",(config.getDatabaseName(),username))
+    cursor.execute("SELECT id, username, password FROM " + config.getDatabaseName() + ".users WHERE username = %s",(username,))
 
     for (id,dbUsername,dbPassword) in cursor:
         users.append({
@@ -61,7 +75,7 @@ def get_userid(username,password):
         print("User \"%s\" not found" % (username))
         return None
     elif len(users) > 1:
-        print("Fatal error, there are multiple users with username \"%s\"" % (username))
+        print("Fatal error, there are multiple users with username \"%s\"" % (username,))
         print(users)
         return None
 
@@ -78,7 +92,7 @@ def get_notes_from_userid(userid):
     cursor = conn.cursor()
     notes = {}
     index = 0
-    notes_query = FileUtils.readFile('queries/notes_query.sql')
+    notes_query = FileUtils.readFile('queries/notes_query.sql').replace('{$id}',str(userid))
     cursor.execute(notes_query)
 
     for (data) in cursor:
