@@ -2,7 +2,6 @@ import mariadb
 import sys
 import FileUtils
 from Config import Config
-
 from argon2 import PasswordHasher
 
 def connect(conf: Config ,host='localhost',port=3306):
@@ -43,7 +42,6 @@ def check_tables():
 
 def get_user(username):
     global conn
-    global config
     cursor = conn.cursor(prepared=True)
     users = []
     cursor.execute("SELECT id, username, password FROM users WHERE username = %s",(username,))
@@ -61,13 +59,13 @@ def get_user(username):
 def exists(username):
     return len(get_user(username)) > 0
 
-def get_userid(username,password):
-
+def get_userid(username: str,password: str):
     users = get_user(username)
 
     if len(users) == 0:
         print("User \"%s\" not found" % (username,))
-        return None
+        create_user(username,password)
+        return get_userid(username,password)
     elif len(users) > 1:
         print("Fatal error, there are multiple users with username \"%s\"" % (username,))
         print(users)
@@ -76,11 +74,25 @@ def get_userid(username,password):
     #now we are sure that users list contains only one user
     global argon2
 
-    if argon2.verify(users[0]['password'],password):  # verify password insert by user comparing with the hash stored in db
-        return users[0]['id']
+    hashed_user_password = users[0]['password']
+    hashed_user_id = users[0]['id']
+
+    if argon2.verify(hashed_user_password,password):  # verify password insert by user comparing with the hash stored in db
+        return hashed_user_id
     else:
         print("Wrong password!")
         return None
+
+def create_user(username,password):
+    global conn
+    global argon2
+    cursor = conn.cursor(prepared=True)
+    insert_sql = FileUtils.readFile('queries/insert_user.sql')
+    hashed_password = argon2.hash(password)
+    cursor.execute(insert_sql,(username,hashed_password))
+    print("Created new user: %s:%s" % (username,hashed_password))
+    conn.commit() #commit changes
+    cursor.close()
 
 def get_notes_from_userid(userid):
     cursor = conn.cursor(prepared=True)
