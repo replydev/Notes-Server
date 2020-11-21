@@ -3,6 +3,7 @@ import sys
 import FileUtils
 from Config import Config
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 def connect(conf: Config ,host='localhost',port=3306):
     global conn
