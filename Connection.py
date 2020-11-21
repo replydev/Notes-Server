@@ -20,16 +20,17 @@ class Connection:
         print(shared_key)
         self.crypto = XChaCha20Crypto(shared_key) #exchange a key for encrypted comunication
 
-        received_json = self.receive_message()
+        received_json = self.receive_message() #now user send json with username and password
         print("Recevied json: %s" % received_json)
 
         if received_json == "":
+            print("Corrupt authentication, closing the socket...")
             self.s.close()
             return
 
-        user_data_json = self.crypto.decrypt(received_json) #now user send json with username and password
+        user_data_json = self.crypto.decrypt(received_json) #decrypt
         user_data = json.loads(user_data_json) #parse json into dict
-        user_id = Database.get_userid(user_data['username'],user_data['password'])  #if username is not in db the server will create a new account
+        user_id = Database.login(user_data['username'],user_data['password'])  #if username is not in db the server will create a new account
 
         if user_id is None: #wrong password or error
             print("Cannot connect due to errors, closing connection..")
@@ -38,9 +39,9 @@ class Connection:
             #self.successfully_connected = False
             return
         
-        self.s.send('yes'.encode('utf-8'))
         self.user_id = user_id
         self.send_all_notes()
+        input("Blocking thread...")
 
 
     def receive_message(self):
@@ -50,8 +51,9 @@ class Connection:
     def send_all_notes(self):
         notes = Database.get_notes_from_userid(self.user_id)
         jsonmsg = json.dumps(notes)
+        print("Sending all notes: %s" % (jsonmsg))
         self.send(jsonmsg)
 
     def send(self,string: str):
         encryted_message = self.crypto.encrypt(string)
-        self.s.send(encryted_message)
+        self.s.send(encryted_message.encode('utf-8'))

@@ -9,7 +9,6 @@ def main():
     Database.check_tables()
 
     connection = Connection()
-    Database.close()
 
 
 if __name__ == '__main__':

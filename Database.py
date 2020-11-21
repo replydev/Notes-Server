@@ -60,13 +60,13 @@ def get_user(username):
 def exists(username):
     return len(get_user(username)) > 0
 
-def get_userid(username: str,password: str):
+def login(username: str,password: str):
     users = get_user(username)
 
     if len(users) == 0:
         print("User \"%s\" not found" % (username,))
         create_user(username,password)
-        return get_userid(username,password)
+        return login(username,password)
     elif len(users) > 1:
         print("Fatal error, there are multiple users with username \"%s\"" % (username,))
         print(users)
@@ -79,7 +79,10 @@ def get_userid(username: str,password: str):
     hashed_user_id = users[0]['id']
 
     try:
-        if argon2.verify(hashed_user_password,password):  # verify password insert by user comparing with the hash stored in db
+        if argon2.verify(hashed_user_password,password):  # verify password insert by user comparing with the hash stored in db            
+            if argon2.check_needs_rehash(hashed_user_password):
+                set_password_for_user(id,argon2.hash(password))
+            print("User authenticated!")
             return hashed_user_id
         else:
             print("Wrong password!")
@@ -101,12 +104,20 @@ def create_user(username,password):
 
 def get_notes_from_userid(userid):
     cursor = conn.cursor(prepared=True)
-    notes = {}
-    index = 0
+    notes = []
     notes_query = FileUtils.readFile('queries/notes_query.sql')
     cursor.execute(notes_query,(str(userid),))
 
     for (data) in cursor:
-        notes[index] = data
+        notes.append(data)
 
     return notes
+
+
+def set_password_for_user(id,new_hash):
+    cursor = conn.cursor(prepared=True)
+    update_passw_sql = FileUtils.readFile('queries/update_user_password.sql')
+    cursor.execute(update_passw_sql,(id,new_hash))
+    conn.commit()
+    cursor.close()
+    
