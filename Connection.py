@@ -37,9 +37,10 @@ class Connection:
             self.s.close()
             #self.successfully_connected = False
             return
-        else:
-            self.s.send('yes'.encode('utf-8'))
-            self.user_id = user_id
+        
+        self.s.send('yes'.encode('utf-8'))
+        self.user_id = user_id
+        self.send_all_notes()
 
 
     def receive_message(self):
