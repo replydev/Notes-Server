@@ -20,26 +20,34 @@ class Connection:
         print(shared_key)
         self.crypto = XChaCha20Crypto(shared_key) #exchange a key for encrypted comunication
 
-        user_data_json = self.crypto.decrypt(s.recv(1024).decode('utf-8')) #now user send json with username and password
+        received_json = self.receive_message()
+        print("Recevied json: %s" % received_json)
+
+        if received_json == "":
+            self.s.close()
+            return
+
+        user_data_json = self.crypto.decrypt(received_json) #now user send json with username and password
         user_data = json.loads(user_data_json) #parse json into dict
         user_id = Database.get_userid(user_data['username'],user_data['password'])  #if username is not in db the server will create a new account
 
         if user_id is None: #wrong password or error
             print("Cannot connect due to errors, closing connection..")
+            self.s.send('no'.encode('utf-8'))
             self.s.close()
             #self.successfully_connected = False
             return
         else:
+            self.s.send('yes'.encode('utf-8'))
             self.user_id = user_id
+
+
+    def receive_message(self):
+        s = self.s.recv(1024).decode('utf-8')
+        return s
 
     def send_all_notes(self):
         notes = Database.get_notes_from_userid(self.user_id)
-        """
-        {
-            
-        }
-
-        """
         jsonmsg = json.dumps(notes)
         self.send(jsonmsg)
 

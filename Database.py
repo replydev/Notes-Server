@@ -77,9 +77,13 @@ def get_userid(username: str,password: str):
     hashed_user_password = users[0]['password']
     hashed_user_id = users[0]['id']
 
-    if argon2.verify(hashed_user_password,password):  # verify password insert by user comparing with the hash stored in db
-        return hashed_user_id
-    else:
+    try:
+        if argon2.verify(hashed_user_password,password):  # verify password insert by user comparing with the hash stored in db
+            return hashed_user_id
+        else:
+            print("Wrong password!")
+            return None
+    except VerifyMismatchError:
         print("Wrong password!")
         return None
 
