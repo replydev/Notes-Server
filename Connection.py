@@ -3,6 +3,7 @@ from MyCryptograpy.XChaCha20Py import XChaCha20Crypto
 from MyCryptograpy.DiffieHellman import DiffieHellmanListening
 import json
 import Database
+import struct
 
 class Connection:
 
@@ -34,26 +35,50 @@ class Connection:
 
         if user_id is None: #wrong password or error
             print("Cannot connect due to errors, closing connection..")
-            self.s.send('no'.encode('utf-8'))
+            self.send_encrypted('no')
             self.s.close()
             #self.successfully_connected = False
             return
-        
-        self.user_id = user_id
-        self.send_all_notes()
-        input("Blocking thread...")
+        else:
+            self.user_id = user_id
+            self.send_encrypted(str(self.user_id))
+            self.receive_message() #wait for client
+            self.send_all_notes()
 
+
+    def is_alive(self):
+        #TODO Implement this
+        return True
 
     def receive_message(self):
-        s = self.s.recv(1024).decode('utf-8')
+        s = self.s.recv(4096).decode('utf-8')
         return s
+
+    def recv_msg(self):
+        # Read message length and unpack it into an integer
+        raw_msglen = self.recvall(self.s, 4)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        # Read the message data
+        return self.recvall(self.s, msglen)
+
+    def recvall(self, sock, n):
+        # Helper function to recv n bytes or return None if EOF is hit
+        data = bytearray()
+        while len(data) < n:
+            packet = sock.recv(n - len(data))
+            if not packet:
+                return None
+            data.extend(packet)
+        return data
 
     def send_all_notes(self):
         notes = Database.get_notes_from_userid(self.user_id)
         jsonmsg = json.dumps(notes)
         print("Sending all notes: %s" % (jsonmsg))
-        self.send(jsonmsg)
+        self.send_encrypted(jsonmsg)
 
-    def send(self,string: str):
+    def send_encrypted(self,string: str):
         encryted_message = self.crypto.encrypt(string)
         self.s.send(encryted_message.encode('utf-8'))

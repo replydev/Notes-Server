@@ -1,0 +1,1 @@
+UPDATE `notes` SET `data`=%s WHERE  `id`=%s;

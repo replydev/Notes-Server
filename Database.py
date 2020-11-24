@@ -120,4 +120,38 @@ def set_password_for_user(id,new_hash):
     cursor.execute(update_passw_sql,(id,new_hash))
     conn.commit()
     cursor.close()
-    
+
+
+def get_note(id):
+    global conn
+    cursor = conn.cursor(prepared=True)
+    notes = []
+    cursor.execute("SELECT id FROM notes WHERE id = %s",(id,))
+
+    for (id) in cursor:
+        notes.append({
+            'id': id
+            })
+
+    cursor.close()
+    return notes
+
+
+def note_exist(id):
+    return len(get_note(id)) > 0
+
+
+def add_note(encrypted_note_json,note_id,author_id):
+    global conn
+    cursor = conn.cursor(prepared=True)
+    if note_exist(note_id):
+        update_existing_note_sql = FileUtils.readFile('queries/update_existing_note.sql')
+        cursor.execute(update_existing_note_sql,(note_id,encrypted_note_json))
+    else:
+        insert_note_sql = FileUtils.readFile('queries/insert_note.sql')
+        insert_association_sql = FileUtils.readFile('queries/insert_association.sql')
+        cursor.execute(insert_note_sql,(encrypted_note_json,))
+        cursor.execute(insert_association_sql,('',author_id,note_id))
+
+    conn.commit()
+    cursor.close()
