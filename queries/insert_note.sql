@@ -1,1 +1,1 @@
-INSERT INTO `notes` (`data`) VALUES (%s);
+INSERT INTO `notes` (`id`,`data`) VALUES (%s,%s);

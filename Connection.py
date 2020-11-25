@@ -76,7 +76,7 @@ class Connection:
     def send_all_notes(self):
         notes = Database.get_notes_from_userid(self.user_id)
         jsonmsg = json.dumps(notes)
-        print("Sending all notes: %s" % (jsonmsg))
+        print("Sending all notes: %s" % (jsonmsg,))
         self.send_encrypted(jsonmsg)
 
     def send_encrypted(self,string: str):

@@ -108,8 +108,8 @@ def get_notes_from_userid(userid):
     notes_query = FileUtils.readFile('queries/notes_query.sql')
     cursor.execute(notes_query,(str(userid),))
 
-    for (data) in cursor:
-        notes.append(data)
+    for data in cursor:
+        notes.append(data[0])
 
     return notes
 
@@ -150,7 +150,10 @@ def add_note(encrypted_note_json,note_id,author_id):
     else:
         insert_note_sql = FileUtils.readFile('queries/insert_note.sql')
         insert_association_sql = FileUtils.readFile('queries/insert_association.sql')
-        cursor.execute(insert_note_sql,(encrypted_note_json,))
+        cursor.execute(insert_note_sql,(note_id,encrypted_note_json))
+        conn.commit()
+        cursor.close()
+        cursor = conn.cursor()
         cursor.execute(insert_association_sql,('',author_id,note_id))
 
     conn.commit()
