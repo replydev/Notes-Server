@@ -21,15 +21,8 @@ class Connection:
         print(shared_key)
         self.crypto = XChaCha20Crypto(shared_key) #exchange a key for encrypted comunication
 
-        received_json = self.receive_message() #now user send json with username and password
-        print("Recevied json: %s" % received_json)
-
-        if received_json == "":
-            print("Corrupt authentication, closing the socket...")
-            self.s.close()
-            return
-
-        user_data_json = self.crypto.decrypt(received_json) #decrypt
+        user_data_json = self.receive_decrypted() #now user send json with username and password
+        print("Recevied json: %s" % user_data_json)
         user_data = json.loads(user_data_json) #parse json into dict
         user_id = Database.login(user_data['username'],user_data['password'])  #if username is not in db the server will create a new account
 
@@ -42,7 +35,7 @@ class Connection:
         else:
             self.user_id = user_id
             self.send_encrypted(str(self.user_id))
-            self.receive_message() #wait for client
+            self.receive_decrypted() #wait for client
             self.send_all_notes()
 
 
@@ -50,9 +43,10 @@ class Connection:
         #TODO Implement this
         return True
 
-    def receive_message(self):
+    def receive_decrypted(self):
         s = self.s.recv(4096).decode('utf-8')
-        return s
+        decrypted = self.crypto.decrypt(s)
+        return decrypted
 
     def recv_msg(self):
         # Read message length and unpack it into an integer
