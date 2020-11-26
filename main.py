@@ -17,13 +17,12 @@ def main():
 
 def handleConnection(connection: Connection):
     while connection.is_alive():
-        message_from_client = connection.receive_message() #wait for user message
-        decrypted_message_from_client = connection.crypto.decrypt(message_from_client)
-        note_dict = json.loads(decrypted_message_from_client)
-        note_id = note_dict['id']
+        message_from_client = connection.receive_decrypted() #wait for user message
+        note_dict = json.loads(message_from_client)
+        note_id = note_dict['id'] = Database.get_new_free_id()
         author_id = note_dict['author']
-        Database.add_note(decrypted_message_from_client,note_id,author_id)
-        connection.send_encrypted("yes")
+        Database.add_note(message_from_client,note_id,author_id)
+        connection.send_encrypted("ok")
         
 
 

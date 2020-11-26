@@ -158,3 +158,26 @@ def add_note(encrypted_note_json,note_id,author_id):
 
     conn.commit()
     cursor.close()
+
+def get_all_notes():
+    global conn
+    cursor = conn.cursor() #no need prepared
+    sql = "SELECT * FROM notes"
+    cursor.execute(sql)
+
+    notes = []
+    for (id,data) in cursor:
+        notes.append({
+            'id': id,
+            'data': data
+        })
+
+    cursor.close()
+    return notes
+
+def get_new_free_id():
+    notes = get_all_notes()
+    if len(notes) == 0:
+        return 0
+    return str(int(notes[len(notes) - 1]['id']) + 1)
+

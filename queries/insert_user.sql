@@ -1,1 +1,1 @@
-INSERT INTO `notes`.`users` (`username`, `password`) VALUES (%s, %s);
+INSERT INTO `users` (`username`, `password`) VALUES (%s, %s);

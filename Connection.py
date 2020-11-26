@@ -48,30 +48,16 @@ class Connection:
         decrypted = self.crypto.decrypt(s)
         return decrypted
 
-    def recv_msg(self):
-        # Read message length and unpack it into an integer
-        raw_msglen = self.recvall(self.s, 4)
-        if not raw_msglen:
-            return None
-        msglen = struct.unpack('>I', raw_msglen)[0]
-        # Read the message data
-        return self.recvall(self.s, msglen)
-
-    def recvall(self, sock, n):
-        # Helper function to recv n bytes or return None if EOF is hit
-        data = bytearray()
-        while len(data) < n:
-            packet = sock.recv(n - len(data))
-            if not packet:
-                return None
-            data.extend(packet)
-        return data
-
     def send_all_notes(self):
         notes = Database.get_notes_from_userid(self.user_id)
-        jsonmsg = json.dumps(notes)
-        print("Sending all notes: %s" % (jsonmsg,))
-        self.send_encrypted(jsonmsg)
+        for json_note in notes:
+            #jsonmsg = json.dumps(json_note)
+            self.send_encrypted(json_note)
+            print("Note sent: %s" % (json_note))
+            self.receive_decrypted() #wait for client input
+        self.send_encrypted("/end/")
+        self.receive_decrypted()
+        
 
     def send_encrypted(self,string: str):
         encryted_message = self.crypto.encrypt(string)
