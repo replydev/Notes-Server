@@ -16,6 +16,7 @@ class Connection:
         server_socket.close()
 
         self.s = s
+        self.alive = True
         diffieHellmanListening = DiffieHellmanListening(addr)
         shared_key = diffieHellmanListening.key_exchange()
         print(shared_key)
@@ -29,7 +30,7 @@ class Connection:
         if user_id is None: #wrong password or error
             print("Cannot connect due to errors, closing connection..")
             self.send_encrypted('no')
-            self.s.close()
+            self.close()
             #self.successfully_connected = False
             return
         else:
@@ -40,8 +41,7 @@ class Connection:
 
 
     def is_alive(self):
-        #TODO Implement this
-        return True
+        return self.alive
 
     def receive_decrypted(self):
         s = self.s.recv(4096).decode('utf-8')
@@ -62,3 +62,7 @@ class Connection:
     def send_encrypted(self,string: str):
         encryted_message = self.crypto.encrypt(string)
         self.s.send(encryted_message.encode('utf-8'))
+
+    def close(self):
+        self.alive = False
+        self.s.close()
