@@ -19,6 +19,8 @@ def main():
 def handleConnection(connection: Connection):
     while connection.is_alive():
         message_from_client = connection.receive_decrypted() #wait for user message
+        if message_from_client == '':
+            message_from_client = 'CLOSE_CONNECTION'
         message_checker = MessageChecker(message_from_client,connection)
         #correctly handled message
         if message_checker.handle_message(): 

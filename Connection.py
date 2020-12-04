@@ -45,6 +45,8 @@ class Connection:
 
     def receive_decrypted(self):
         s = self.s.recv(4096).decode('utf-8')
+        if s == '':
+            return ''
         decrypted = self.crypto.decrypt(s)
         return decrypted
 
